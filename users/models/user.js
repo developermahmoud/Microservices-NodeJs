@@ -32,6 +32,9 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+/**
+ * Ignore password to return
+ */
 userSchema.set("toJSON", {
   transform: function (doc, ret, opt) {
     delete ret["password"];
@@ -39,6 +42,7 @@ userSchema.set("toJSON", {
   },
 });
 
-const User = mongoose.model("User", userSchema);
-
-export default User;
+export const User = mongoose.model("User", userSchema);
+export const createUser = (user) => new User(user)
+export const getUser = async (query) => await User.findOne(query)
+export const passwordIsMatch = async (password, hashed) => await bcrypt.compare(password, hashed)

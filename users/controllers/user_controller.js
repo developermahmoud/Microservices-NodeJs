@@ -1,10 +1,10 @@
-import UserRegisterEmail from "../mails/user_register_email.js";
-import User from "../models/user.js";
+import RegisterEmailJob from "../jobs/register_email_job.js";
+import { User, createUser, getUser, passwordIsMatch } from "../models/user.js";
 
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    const checkUser = await User.findOne({ email });
+    const checkUser = await getUser({ email });
     if (checkUser) {
       return res.status(422).json([
         {
@@ -16,13 +16,31 @@ export const register = async (req, res) => {
         },
       ]);
     }
-    const user = new User({ name, email, password });
+    const user = createUser({ name, email, password });
     await user.save();
 
     /**
      * Send Email
      */
-    new UserRegisterEmail(user.email).queue()
+    new RegisterEmailJob(user.email).queue();
+
+    res.status(201).json({ user });
+  } catch (error) {
+    res.status(400).json(error.message);
+  }
+};
+
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await getUser({ email });
+    if (!user) {
+      return res.status(401).json({ msg: "invalid creadentials" });
+    }
+
+    if (!passwordIsMatch(password, user.password)) {
+      return res.status(401).json({ msg: "invalid creadentials" });
+    }
 
     res.status(201).json({ user });
   } catch (error) {

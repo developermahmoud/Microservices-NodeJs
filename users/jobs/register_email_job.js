@@ -1,6 +1,6 @@
 import amqplib from "amqplib";
 
-export default class UserRegisterEmail {
+export default class RegisterEmailJob {
   constructor(email) {
     this.email = email;
     this.subject = "Welcome Email";
