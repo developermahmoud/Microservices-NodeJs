@@ -42,33 +42,40 @@ app.use("/", (req, res, next) => {
   /**
    * Get Headers
    */
-  const headers = JSON.stringify(req.headers);
+  const headers = {};
+  if (req.header("token")) {
+    headers["token"] = req.header("token");
+  }
 
   /**
    * Call service
    */
-  request(
-    {
-      url: fullUrl,
-      json: true,
-      headers: headers,
-      method: req.method,
-      body: req.body,
-    },
-    (err, result, body) => {
-      if (err) {
-        jsonError(res, err.message, 400);
+  try {
+    request(
+      {
+        headers: headers,
+        url: fullUrl,
+        json: true,
+        method: req.method,
+        body: req.body,
+      },
+      (err, result, body) => {
+        if (err) {
+          jsonError(res, err.message, 400);
+          return;
+        }
+
+        if ([200, 201, 202].includes(result.statusCode)) {
+          jsonOK(res, result.body, "", result.statusCode);
+        } else {
+          jsonError(res, result.body, result.statusCode);
+        }
         return;
       }
-
-      if ([200, 201, 202].includes(result.statusCode)) {
-        jsonOK(res, result.body, "", result.statusCode);
-      } else {
-        jsonError(res, result.body, result.statusCode);
-      }
-      return;
-    }
-  );
+    );
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 app.listen(process.env.PORT, () => {

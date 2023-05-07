@@ -14,12 +14,12 @@ const tokenSchema = mongoose.Schema(
     expireAt: {
       type: Date,
       default: new Date(),
-      expires: 20,
+      expires: 3600,
     },
   },
   { timestamps: true }
 );
 
 export const Token = mongoose.model("Token", tokenSchema);
-export const saveToken = async (userId, token) =>
-  new Token({ userId, token });
+export const saveToken = async (userId, token) => new Token({ userId, token });
+export const getByToken = async (token) => await Token.findOne({ token }).populate("userId");

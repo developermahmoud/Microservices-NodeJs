@@ -46,11 +46,19 @@ export const login = async (req, res) => {
 
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
 
+    const savedToken = await saveToken(user._id, token);
+    savedToken.save();
 
-    const savedToken = await saveToken(user._id, token)
-    savedToken.save()
-    
     res.status(201).json({ token });
+  } catch (error) {
+    res.status(400).json(error.message);
+  }
+};
+
+export const loggedUser = async (req, res) => {
+  try {
+    
+    res.status(200).json({user: req.user});
   } catch (error) {
     res.status(400).json(error.message);
   }
