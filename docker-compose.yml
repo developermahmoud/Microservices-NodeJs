@@ -1,0 +1,65 @@
+version: "3"
+services:
+  gateway:
+    container_name: nodejs-microservices-gateway
+    build:
+      context: ./gateway
+      dockerfile: dockerfile
+    restart: always
+    ports:
+      - 3001:3001
+    env_file:
+      - ./gateway/.env
+    volumes:
+      - ./:/app
+    networks:
+      - microservices-nodejs
+  rabbitmq:
+    image: rabbitmq:3.10-rc-management-alpine
+    container_name: nodejs-microservices-rabbitmq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    networks:
+      - microservices-nodejs
+  users:
+    container_name: nodejs-microservices-users
+    build:
+      context: ./users
+      dockerfile: dockerfile
+    restart: always
+    env_file:
+      - ./users/.env
+    ports:
+      - 3002:3002
+    volumes:
+      - ./:/app
+    networks:
+      - microservices-nodejs
+    depends_on:
+      - gateway
+      - rabbitmq
+  consumer:
+    container_name: nodejs-microservices-consumer
+    build:
+      context: ./consumer
+      dockerfile: dockerfile
+    restart: always
+    env_file:
+      - ./consumer/.env
+    ports:
+      - 5001:5001
+    volumes:
+      - ./:/app
+    networks:
+      - microservices-nodejs
+    depends_on:
+      - gateway
+      - rabbitmq
+
+volumes:
+  rabbitmq_data:
+  rabbitmq_log:
+networks:
+  microservices-nodejs:
+    driver: bridge
