@@ -1,5 +1,7 @@
+import jwt from "jsonwebtoken";
 import RegisterEmailJob from "../jobs/register_email_job.js";
-import { User, createUser, getUser, passwordIsMatch } from "../models/user.js";
+import { createUser, getUser, passwordIsMatch } from "../models/user.js";
+import { saveToken } from "../models/token.js";
 
 export const register = async (req, res) => {
   try {
@@ -42,7 +44,13 @@ export const login = async (req, res) => {
       return res.status(401).json({ msg: "invalid creadentials" });
     }
 
-    res.status(201).json({ user });
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
+
+
+    const savedToken = await saveToken(user._id, token)
+    savedToken.save()
+    
+    res.status(201).json({ token });
   } catch (error) {
     res.status(400).json(error.message);
   }
